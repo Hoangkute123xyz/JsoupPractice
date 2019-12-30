@@ -1,7 +1,14 @@
 package com.hoangpro.jsouppractice;
 
+import android.provider.ContactsContract;
+import android.service.autofill.UserData;
+
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.raizlabs.android.dbflow.annotation.Column;
+import com.raizlabs.android.dbflow.annotation.PrimaryKey;
+import com.raizlabs.android.dbflow.annotation.Table;
+import com.raizlabs.android.dbflow.structure.BaseModel;
 
 import java.util.List;
 
@@ -29,55 +36,72 @@ public class SongJSONObject {
         this.song = song;
     }
 
-    public class Song {
-
+    @Table(database = SongDbFlow.class)
+    public static class Song extends BaseModel {
+        @Column
+        @PrimaryKey
         @SerializedName("id")
         @Expose
         private Integer id;
+        @Column
         @SerializedName("slug")
         @Expose
         private String slug;
         @SerializedName("name")
         @Expose
+        @Column
         private String name;
         @SerializedName("url")
         @Expose
+        @Column
         private String url;
         @SerializedName("url_vimeo")
         @Expose
+        @Column
         private String urlVimeo;
         @SerializedName("check_download")
         @Expose
+        @Column
         private Integer checkDownload;
         @SerializedName("thumbnail")
         @Expose
+        @Column
         private String thumbnail;
         @SerializedName("created_at")
         @Expose
+        @Column
         private String createdAt;
         @SerializedName("updated_at")
         @Expose
+        @Column
         private String updatedAt;
         @SerializedName("video_type")
         @Expose
+        @Column
         private String videoType;
         @SerializedName("video_length")
         @Expose
+        @Column
         private String videoLength;
         @SerializedName("level_id")
         @Expose
+        @Column
         private Integer levelId;
         @SerializedName("name_vn")
         @Expose
+        @Column
         private String nameVn;
         @SerializedName("name_ro")
         @Expose
+        @Column
         private String nameRo;
         @SerializedName("name_en")
         @Expose
+        @Column
         private String nameEn;
         @SerializedName("view")
         @Expose
+        @Column
         private Integer view;
 
         public Integer getId() {
@@ -208,5 +232,7 @@ public class SongJSONObject {
             this.view = view;
         }
 
+        public Song() {
+        }
     }
 }

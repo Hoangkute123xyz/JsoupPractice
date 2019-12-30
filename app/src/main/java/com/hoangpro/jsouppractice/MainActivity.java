@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.gson.Gson;
+import com.raizlabs.android.dbflow.sql.language.SQLite;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -37,7 +38,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initView();
-        list = new ArrayList<>();
+        list = isOnline() ?new ArrayList<SongJSONObject.Song>():getSongFromdb();
+        Log.e(TAG, list.size()+"");
         adapter = new PostAdapter(this, list);
         rvPost.setAdapter(adapter);
         rvPost.setLayoutManager(new GridLayoutManager(this, 2));
@@ -45,21 +47,38 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
-                GridLayoutManager layoutManager= (GridLayoutManager) recyclerView.getLayoutManager();
-                Log.e("TAG", "position: "+layoutManager.findLastVisibleItemPosition());
-                if(layoutManager.findLastVisibleItemPosition()==list.size()-1 && list.size()>0){
+                GridLayoutManager layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
+                if (layoutManager.findLastVisibleItemPosition() == list.size() - 1 && list.size() > 0 && isOnline()) {
                     pgLoadmore.setVisibility(View.VISIBLE);
-                    new GetContent().execute(URL+currentPage);
-                    Log.e(TAG, "isLoadMore: true");
+                    new GetContent().execute(URL + currentPage);
                 }
             }
         });
-        new GetContent().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, URL+currentPage);
+        new GetContent().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, URL + currentPage);
+    }
+
+    List<SongJSONObject.Song> getSongFromdb() {
+        return SQLite.select().from(SongJSONObject.Song.class).queryList();
     }
 
     private void initView() {
         rvPost = findViewById(R.id.rvPost);
         pgLoadmore = findViewById(R.id.pgLoadmore);
+    }
+
+    private boolean isOnline() {
+        Runtime runtime = Runtime.getRuntime();
+        try {
+            Process ipProcess = runtime.exec("/system/bin/ping -c 1 8.8.8.8");
+            int exitValue = ipProcess.waitFor();
+            return (exitValue == 0);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        return false;
     }
 
     class GetContent extends AsyncTask<String, String, List<SongJSONObject.Song>> {
@@ -79,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
                 Response response = okHttpClient.newCall(request).execute();
                 String json = response.body().string();
                 SongJSONObject jsonObject = new Gson().fromJson(json, SongJSONObject.class);
-                list=jsonObject.getSong();
+                list = jsonObject.getSong();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -93,6 +112,11 @@ public class MainActivity extends AppCompatActivity {
             adapter.notifyDataSetChanged();
             pgLoadmore.setVisibility(View.GONE);
             currentPage++;
+            if (list.size() <= 10) {
+                for (SongJSONObject.Song song : list) {
+                    song.save();
+                }
+            }
         }
     }
 }
