@@ -12,7 +12,11 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.gson.Gson;
+import com.raizlabs.android.dbflow.config.FlowManager;
 import com.raizlabs.android.dbflow.sql.language.SQLite;
+import com.raizlabs.android.dbflow.structure.database.DatabaseWrapper;
+import com.raizlabs.android.dbflow.structure.database.transaction.ProcessModelTransaction;
+import com.raizlabs.android.dbflow.structure.database.transaction.Transaction;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -38,23 +42,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initView();
-        list = isOnline() ?new ArrayList<SongJSONObject.Song>():getSongFromdb();
-        Log.e(TAG, list.size()+"");
-        adapter = new PostAdapter(this, list);
-        rvPost.setAdapter(adapter);
-        rvPost.setLayoutManager(new GridLayoutManager(this, 2));
-        rvPost.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
-                GridLayoutManager layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
-                if (layoutManager.findLastVisibleItemPosition() == list.size() - 1 && list.size() > 0 && isOnline()) {
-                    pgLoadmore.setVisibility(View.VISIBLE);
-                    new GetContent().execute(URL + currentPage);
-                }
-            }
-        });
-        new GetContent().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, URL + currentPage);
+        new GetNetWorkStatus().execute();
     }
 
     List<SongJSONObject.Song> getSongFromdb() {
@@ -64,21 +52,7 @@ public class MainActivity extends AppCompatActivity {
     private void initView() {
         rvPost = findViewById(R.id.rvPost);
         pgLoadmore = findViewById(R.id.pgLoadmore);
-    }
-
-    private boolean isOnline() {
-        Runtime runtime = Runtime.getRuntime();
-        try {
-            Process ipProcess = runtime.exec("/system/bin/ping -c 1 8.8.8.8");
-            int exitValue = ipProcess.waitFor();
-            return (exitValue == 0);
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        return false;
+        pgLoadmore.setVisibility(View.VISIBLE);
     }
 
     class GetContent extends AsyncTask<String, String, List<SongJSONObject.Song>> {
@@ -111,12 +85,72 @@ public class MainActivity extends AppCompatActivity {
             list.addAll(list1);
             adapter.notifyDataSetChanged();
             pgLoadmore.setVisibility(View.GONE);
-            currentPage++;
-            if (list.size() <= 10) {
-                for (SongJSONObject.Song song : list) {
-                    song.save();
-                }
+            if (currentPage == 0) {
+                FlowManager.getDatabase(SongDbFlow.class)
+                        .beginTransactionAsync(new ProcessModelTransaction.Builder<>(
+                                new ProcessModelTransaction.ProcessModel<SongJSONObject.Song>() {
+                                    @Override
+                                    public void processModel(SongJSONObject.Song song, DatabaseWrapper wrapper) {
+                                        song.save();
+                                    }
+                                }).addAll(list).build())
+                        .error(new Transaction.Error() {
+                            @Override
+                            public void onError(Transaction transaction, Throwable error) {
+
+                            }
+                        })
+                        .success(new Transaction.Success() {
+                            @Override
+                            public void onSuccess(Transaction transaction) {
+
+                            }
+                        }).build().execute();
             }
+            currentPage++;
         }
     }
+
+    class GetNetWorkStatus extends AsyncTask<Void, Void, Boolean> {
+
+        @Override
+        protected Boolean doInBackground(Void... voids) {
+            Runtime runtime = Runtime.getRuntime();
+            try {
+                Process ipProcess = runtime.exec("/system/bin/ping -c 1 8.8.8.8");
+                int exitValue = ipProcess.waitFor();
+                return (exitValue == 0);
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            return false;
+        }
+
+        @Override
+        protected void onPostExecute(final Boolean b) {
+            super.onPostExecute(b);
+            pgLoadmore.setVisibility(View.GONE);
+            list = b ? new ArrayList<SongJSONObject.Song>() : getSongFromdb();
+            Log.e("size", list.size() + "");
+            adapter = new PostAdapter(MainActivity.this, list);
+            rvPost.setAdapter(adapter);
+            rvPost.setLayoutManager(new GridLayoutManager(MainActivity.this, 2));
+            rvPost.addOnScrollListener(new RecyclerView.OnScrollListener() {
+                @Override
+                public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                    super.onScrolled(recyclerView, dx, dy);
+                    GridLayoutManager layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
+                    if (layoutManager.findLastVisibleItemPosition() == list.size() - 1 && list.size() > 0 && b) {
+                        pgLoadmore.setVisibility(View.VISIBLE);
+                        new GetContent().execute(URL + currentPage);
+                    }
+                }
+            });
+            new GetContent().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, URL + currentPage);
+        }
+    }
+
 }
