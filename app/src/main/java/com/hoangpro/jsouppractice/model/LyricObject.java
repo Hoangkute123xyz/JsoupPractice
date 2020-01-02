@@ -3,6 +3,7 @@ package com.hoangpro.jsouppractice.model;
 import java.util.List;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.hoangpro.jsouppractice.morefunc.MyFunct;
 
 public class LyricObject {
 
@@ -64,6 +65,14 @@ public class LyricObject {
         @SerializedName("sentence_translates")
         @Expose
         private String sentenceTranslates;
+
+        private String furiganaText;
+        public void setFuriganaText(){
+            this.furiganaText= MyFunct.toFurigana(this.sentenceValue,this.sentenceHira);
+        }
+        public String getFuriganaText(){
+            return this.furiganaText;
+        }
 
         public Integer getId() {
             return id;

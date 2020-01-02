@@ -2,6 +2,7 @@ package com.hoangpro.jsouppractice.adapter;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,8 +15,12 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.youtube.player.YouTubePlayer;
 import com.hoangpro.jsouppractice.R;
 import com.hoangpro.jsouppractice.model.LyricObject;
+import com.hoangpro.jsouppractice.morefunc.FuriganaTextView;
+import com.hoangpro.jsouppractice.morefunc.MyFunct;
 import com.hoangpro.jsouppractice.morefunc.MySession;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Handler;
 
@@ -40,11 +45,10 @@ public class LyricAdapater extends RecyclerView.Adapter<LyricAdapater.LyricHolde
         return new LyricHolder(LayoutInflater.from(context).inflate(R.layout.item_lyric, parent, false));
     }
 
-
     @Override
     public void onBindViewHolder(@NonNull final LyricHolder holder, int position) {
         final LyricObject.Datum datum = list.get(position);
-        holder.tvValue.setText(datum.getSentenceValue());
+        holder.tvValue.setText(MyFunct.htlm2Furigana(datum.getFuriganaText()));
         holder.tvRo.setText(datum.getSentenceRo());
         holder.tvTraslate.setText(datum.getSentenceTranslates());
         holder.itemView.setOnClickListener(new View.OnClickListener() {
@@ -53,14 +57,16 @@ public class LyricAdapater extends RecyclerView.Adapter<LyricAdapater.LyricHolde
                 player.seekToMillis((int) MySession.toMilies(datum.getStartTime()));
             }
         });
-        if (MySession.toMilies(datum.getStartTime())<=player.getCurrentTimeMillis() &&
-        MySession.toMilies(datum.getEndTime())>=player.getCurrentTimeMillis()){
+        if (MySession.toMilies(datum.getStartTime()) <= player.getCurrentTimeMillis() &&
+                MySession.toMilies(datum.getEndTime()) >= player.getCurrentTimeMillis()) {
+            Log.e("positionLyric", position+"");
             if (position < list.size() - 3)
                 rvLyrics.smoothScrollToPosition(position + 2);
             holder.itemView.setBackgroundColor(Color.GRAY);
         } else {
             holder.itemView.setBackgroundColor(Color.WHITE);
         }
+
     }
 
     @Override
@@ -70,7 +76,7 @@ public class LyricAdapater extends RecyclerView.Adapter<LyricAdapater.LyricHolde
 
     protected class LyricHolder extends RecyclerView.ViewHolder {
         ImageView imgPlay;
-        TextView tvValue;
+        FuriganaTextView tvValue;
         TextView tvRo;
         TextView tvTraslate;
 

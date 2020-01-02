@@ -1,12 +1,10 @@
 package com.hoangpro.jsouppractice.activity;
 
-import android.animation.Keyframe;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.service.autofill.UserData;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -44,23 +42,28 @@ public class VIewVideo extends YouTubeBaseActivity implements YouTubePlayer.OnIn
     private LyricAdapater adapter;
     private Thread thread;
     private Handler handler;
-    private final int UPDATE_CODE=1001;
+    private final int UPDATE_CODE = 1001;
+    private boolean isStop = false;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_view_video);
         song = new Gson().fromJson(MySession.currentJson, SongJSONObject.Song.class);
+        Log.e("idSong", song.getId() + "");
         URL += song.getId() + "&language_code=vn";
         initView();
         ytPlay.initialize(getString(R.string.Youtube_api_key), this);
         list = new ArrayList<>();
-        handler = new Handler(){
+        handler = new Handler() {
             @Override
             public void handleMessage(@NonNull Message msg) {
                 super.handleMessage(msg);
-                if (msg.what== UPDATE_CODE && player!=null){
-                    adapter.notifyDataSetChanged();
+                if (player != null) {
+                    if (msg.what == UPDATE_CODE && !isStop) {
+                        adapter.notifyDataSetChanged();
+                    }
                 }
             }
         };
@@ -76,7 +79,7 @@ public class VIewVideo extends YouTubeBaseActivity implements YouTubePlayer.OnIn
         player = youTubePlayer;
         youTubePlayer.cueVideo(song.getUrl().split("v=")[1]);
         player.setPlayerStateChangeListener(this);
-        adapter = new LyricAdapater(list, this, player,rvDatum);
+        adapter = new LyricAdapater(list, this, player, rvDatum);
         rvDatum.setAdapter(adapter);
         rvDatum.setLayoutManager(new LinearLayoutManager(this));
         new GetLyrics().execute(URL.trim());
@@ -114,7 +117,7 @@ public class VIewVideo extends YouTubeBaseActivity implements YouTubePlayer.OnIn
                     message.what = UPDATE_CODE;
                     handler.sendMessage(message);
                     try {
-                        Thread.sleep(1000);
+                        Thread.sleep(100);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -172,8 +175,9 @@ public class VIewVideo extends YouTubeBaseActivity implements YouTubePlayer.OnIn
         @Override
         protected void onPostExecute(List<LyricObject.Datum> data) {
             super.onPostExecute(data);
-            for (LyricObject.Datum datum:data){
-                if (datum.getSentenceValue().length()>0){
+            for (LyricObject.Datum datum : data) {
+                if (datum.getSentenceValue().length() > 0) {
+                    datum.setFuriganaText();
                     list.add(datum);
                 }
             }
@@ -182,16 +186,57 @@ public class VIewVideo extends YouTubeBaseActivity implements YouTubePlayer.OnIn
     }
 
     @Override
+    protected void onDestroy() {
+        if (thread != null)
+            if (!thread.isInterrupted())
+                thread.interrupt();
+        if (player != null) {
+            player.release();
+        }
+        super.onDestroy();
+    }
+
+    @Override
+    protected void onResume() {
+        if (thread != null)
+            if (thread.isInterrupted())
+                thread.start();
+        super.onResume();
+    }
+
+    @Override
+    protected void onRestart() {
+        if (thread != null)
+            if (thread.isInterrupted()) {
+                thread.start();
+            }
+        super.onRestart();
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (thread != null)
+            if (!thread.isInterrupted())
+                thread.interrupt();
+        isStop = true;
+        player.pause();
+        super.onBackPressed();
+    }
+
+    @Override
     protected void onPause() {
+        if (thread != null)
+            if (!thread.isInterrupted())
+                thread.interrupt();
         super.onPause();
-        if (player != null)
-            player.pause();
     }
 
     @Override
     protected void onStop() {
+        if (thread != null)
+            if (!thread.isInterrupted()) {
+                thread.interrupt();
+            }
         super.onStop();
-        if (player != null)
-            player.pause();
     }
 }

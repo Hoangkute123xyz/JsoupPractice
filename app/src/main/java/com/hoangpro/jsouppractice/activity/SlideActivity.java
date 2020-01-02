@@ -98,7 +98,7 @@ public class SlideActivity extends AppCompatActivity {
                         case 1:
                             viewPager.setCurrentItem(currentItem);
                             currentItem++;
-                            if (currentItem==list.size()-1){
+                            if (currentItem==list.size()){
                                 currentItem=0;
                             }
                             break;
