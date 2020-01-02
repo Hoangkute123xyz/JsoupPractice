@@ -1,4 +1,4 @@
-package com.hoangpro.jsouppractice;
+package com.hoangpro.jsouppractice.activity;
 
 import android.app.Application;
 

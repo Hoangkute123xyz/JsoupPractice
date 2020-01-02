@@ -1,4 +1,4 @@
-package com.hoangpro.jsouppractice;
+package com.hoangpro.jsouppractice.adapter;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -11,30 +11,32 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.hoangpro.jsouppractice.R;
+import com.hoangpro.jsouppractice.model.SongJSONObject;
 
 import java.util.List;
 
-class PostHolder extends RecyclerView.ViewHolder {
 
-    ImageView imgThumb;
-    TextView tvView;
-    TextView tvDuration;
-    TextView tvNameJ;
-    TextView tvNameVn;
-    TextView tvLevel;
+public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostHolder> {
+    class PostHolder extends RecyclerView.ViewHolder {
 
-    public PostHolder(@NonNull View itemView) {
-        super(itemView);
-        imgThumb = itemView.findViewById(R.id.imgThumb);
-        tvView = itemView.findViewById(R.id.tvView);
-        tvDuration = itemView.findViewById(R.id.tvDuration);
-        tvNameJ = itemView.findViewById(R.id.tvNameJ);
-        tvNameVn = itemView.findViewById(R.id.tvNameVn);
-        tvLevel = itemView.findViewById(R.id.tvLevel);
+        ImageView imgThumb;
+        TextView tvView;
+        TextView tvDuration;
+        TextView tvNameJ;
+        TextView tvNameVn;
+        TextView tvLevel;
+
+        public PostHolder(@NonNull View itemView) {
+            super(itemView);
+            imgThumb = itemView.findViewById(R.id.imgThumb);
+            tvView = itemView.findViewById(R.id.tvView);
+            tvDuration = itemView.findViewById(R.id.tvDuration);
+            tvNameJ = itemView.findViewById(R.id.tvNameJ);
+            tvNameVn = itemView.findViewById(R.id.tvNameVn);
+            tvLevel = itemView.findViewById(R.id.tvLevel);
+        }
     }
-}
-
-public class PostAdapter extends RecyclerView.Adapter<PostHolder> {
     private Context context;
     private List<SongJSONObject.Song> list;
 

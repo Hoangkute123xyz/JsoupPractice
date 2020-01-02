@@ -1,10 +1,8 @@
-package com.hoangpro.jsouppractice;
-
-import android.provider.ContactsContract;
-import android.service.autofill.UserData;
+package com.hoangpro.jsouppractice.model;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.hoangpro.jsouppractice.adapter.SongDbFlow;
 import com.raizlabs.android.dbflow.annotation.Column;
 import com.raizlabs.android.dbflow.annotation.PrimaryKey;
 import com.raizlabs.android.dbflow.annotation.Table;
@@ -103,6 +101,28 @@ public class SongJSONObject {
         @Expose
         @Column
         private Integer view;
+
+        @Override
+        public String toString() {
+            return "Song{" +
+                    "id=" + id +
+                    ", slug='" + slug + '\'' +
+                    ", name='" + name + '\'' +
+                    ", url='" + url + '\'' +
+                    ", urlVimeo='" + urlVimeo + '\'' +
+                    ", checkDownload=" + checkDownload +
+                    ", thumbnail='" + thumbnail + '\'' +
+                    ", createdAt='" + createdAt + '\'' +
+                    ", updatedAt='" + updatedAt + '\'' +
+                    ", videoType='" + videoType + '\'' +
+                    ", videoLength='" + videoLength + '\'' +
+                    ", levelId=" + levelId +
+                    ", nameVn='" + nameVn + '\'' +
+                    ", nameRo='" + nameRo + '\'' +
+                    ", nameEn='" + nameEn + '\'' +
+                    ", view=" + view +
+                    '}';
+        }
 
         public Integer getId() {
             return id;

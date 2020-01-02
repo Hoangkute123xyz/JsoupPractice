@@ -1,8 +1,7 @@
-package com.hoangpro.jsouppractice;
+package com.hoangpro.jsouppractice.activity;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 
@@ -12,6 +11,10 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.gson.Gson;
+import com.hoangpro.jsouppractice.adapter.PostAdapter;
+import com.hoangpro.jsouppractice.R;
+import com.hoangpro.jsouppractice.adapter.SongDbFlow;
+import com.hoangpro.jsouppractice.model.SongJSONObject;
 import com.raizlabs.android.dbflow.config.FlowManager;
 import com.raizlabs.android.dbflow.sql.language.SQLite;
 import com.raizlabs.android.dbflow.structure.database.DatabaseWrapper;
@@ -46,10 +49,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         initView();
         new GetNetWorkStatus().execute();
-    }
-
-    List<SongJSONObject.Song> getSongFromdb() {
-        return SQLite.select().from(SongJSONObject.Song.class).queryList();
     }
 
     private void initView() {
@@ -135,9 +134,12 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(final Boolean b) {
             super.onPostExecute(b);
-            pgLoadmore.setVisibility(View.GONE);
-            list = b ? new ArrayList<SongJSONObject.Song>() : getSongFromdb();
-            Log.e("size", list.size() + "");
+            list = new ArrayList<>();
+            if (!b) {
+                new GetListAsync().execute();
+            } else {
+                pgLoadmore.setVisibility(View.GONE);
+            }
             adapter = new PostAdapter(MainActivity.this, list);
             rvPost.setAdapter(adapter);
             rvPost.setLayoutManager(new GridLayoutManager(MainActivity.this, 2));
@@ -153,6 +155,21 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
             new GetContent().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, URL + currentPage);
+        }
+    }
+
+    class GetListAsync extends AsyncTask<Void, Void, List<SongJSONObject.Song>> {
+        @Override
+        protected List<SongJSONObject.Song> doInBackground(Void... voids) {
+            return SQLite.select().from(SongJSONObject.Song.class).queryList();
+        }
+
+        @Override
+        protected void onPostExecute(List<SongJSONObject.Song> songs) {
+            super.onPostExecute(songs);
+            pgLoadmore.setVisibility(View.GONE);
+            list.addAll(songs);
+            adapter.notifyDataSetChanged();
         }
     }
 

@@ -1,4 +1,4 @@
-package com.hoangpro.jsouppractice;
+package com.hoangpro.jsouppractice.adapter;
 
 import com.raizlabs.android.dbflow.annotation.Database;
 
