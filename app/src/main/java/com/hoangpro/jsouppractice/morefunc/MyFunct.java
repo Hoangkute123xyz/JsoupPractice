@@ -19,7 +19,7 @@ public class MyFunct {
         List<String> lg1 = new ArrayList<>(), lg2 = new ArrayList<>();
         Collections.addAll(lg1, s1.split(""));
         Collections.addAll(lg2, s2.split(""));
-        while (lg1.size() > 0) {
+        while (lg1.size() > 0 && lg2.size()>0) {
             Log.e("Result", lg1.size()+"");
             String sup = "", sub = "";
             if (lg1.size()==1){
@@ -35,10 +35,12 @@ public class MyFunct {
                     result+="<ruby>"+lg1.get(0)+"<rt>"+sub+"</rt>"+"</ruby>";
                     lg1.remove(0);
                 }
+                break;
             } else if (lg1.get(0).equals(lg2.get(0))) {
                 result += lg1.get(0);
                 lg1.remove(0);
                 lg2.remove(0);
+                continue;
             } else {
                 int f1 = -1, f2 = -1;
                 for (int i = 0; i < lg1.size(); i++) {
